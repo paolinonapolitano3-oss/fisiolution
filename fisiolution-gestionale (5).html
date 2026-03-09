@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fisiolution">
+<title>Fisiolution — Gestionale</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blu: #1A4F7A;
+  --blu-deep: #0f2e47;
+  --blu-mid: #1d5a8a;
+  --blu-light: #2a6fa8;
+  --blu-pale: #e8f0f7;
+  --oro: #C9A84C;
+  --oro-light: #e0c06a;
+  --oro-dark: #a8863a;
+  --bianco: #FFFFFF;
+  --grigio-chiaro: #f2f5f8;
+  --grigio: #e2e8ed;
+  --grigio-mid: #c8d2da;
+  --testo: #1a2733;
+  --testo-light: #607080;
+  --verde: #2ecc71;
+  --rosso: #e74c3c;
+  --shadow: 0 2px 16px rgba(26,79,122,0.10);
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'DM Sans', sans-serif; background: var(--grigio-chiaro); color: var(--testo); min-height: 100vh; overflow-x: hidden; }
+
+header {
+  background: linear-gradient(135deg, var(--blu-deep) 0%, var(--blu) 70%, var(--blu-mid) 100%);
+  padding: 14px 20px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.logo { display: flex; align-items: center; gap: 11px; }
+.logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--oro), var(--oro-light)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 3px 10px rgba(201,168,76,0.4); }
+.logo-text { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--bianco); }
+.logo-text span { color: var(--oro-light); }
+.header-time { font-size: 13px; color: rgba(255,255,255,0.65); text-align: right; line-height: 1.4; }
+.header-time strong { display: block; color: var(--oro-light); font-size: 14px; }
+
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--blu-deep); display: flex; z-index: 200; border-top: 1px solid rgba(201,168,76,0.25); padding-bottom: env(safe-area-inset-bottom); }
+.bnav-btn { flex: 1; background: none; border: none; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600; padding: 10px 4px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: color 0.2s; letter-spacing: 0.3px; }
+.bnav-btn .ni { font-size: 20px; line-height: 1; }
+.bnav-btn.active { color: var(--oro-light); }
+
+.main { max-width: 600px; margin: 0 auto; padding: 18px 14px 90px; }
+.section { display: none; animation: fadeIn 0.25s ease; }
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.card { background: var(--bianco); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 18px; margin-bottom: 16px; }
+.card-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 600; color: var(--blu); margin-bottom: 18px; display: flex; align-items: center; gap: 9px; }
+.card-title::before { content:''; width:3px; height:20px; background:linear-gradient(to bottom,var(--oro),var(--oro-dark)); border-radius:2px; flex-shrink:0; }
+
+/* CALENDARIO */
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cal-nav-btn { background:var(--grigio-chiaro); border:none; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--blu); transition:background 0.2s; }
+.cal-nav-btn:hover { background:var(--blu-pale); }
+.cal-title { font-family:'Playfair Display',serif; font-size:16px; font-weight:600; color:var(--testo); text-align:center; text-transform:capitalize; }
+
+.week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:16px; }
+.day-cell { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:7px 3px; border-radius:10px; transition:background 0.15s; border:2px solid transparent; }
+.day-cell:hover { background:var(--blu-pale); }
+.day-cell.selected { background:var(--blu); border-color:var(--oro); }
+.day-cell.today .day-num { color:var(--oro-dark); font-weight:700; }
+.day-cell.disabled { opacity:0.3; cursor:default; pointer-events:none; }
+.day-name { font-size:10px; font-weight:600; color:var(--testo-light); text-transform:uppercase; letter-spacing:0.5px; }
+.day-cell.selected .day-name { color:rgba(255,255,255,0.7); }
+.day-num { font-size:15px; font-weight:600; color:var(--testo); line-height:1; }
+.day-cell.selected .day-num { color:var(--bianco); }
+.day-dot { width:5px; height:5px; border-radius:50%; background:var(--oro); }
+.day-dot.hidden { visibility:hidden; }
+
+.slots-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:6px; }
+.slots-date-label { font-size:13px; font-weight:600; color:var(--testo-light); text-transform:capitalize; }
+.slots-legend { display:flex; gap:10px; font-size:11px; font-weight:600; }
+.leg-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:3px; }
+
+.time-slots { display:flex; flex-direction:column; gap:6px; max-height:360px; overflow-y:auto; padding-right:2px; }
+.time-slots::-webkit-scrollbar { width:3px; }
+.time-slots::-webkit-scrollbar-thumb { background:var(--grigio-mid); border-radius:2px; }
+
+.slot { display:flex; align-items:center; padding:10px 14px; border-radius:10px; border:1.5px solid var(--grigio); cursor:pointer; transition:all 0.18s; gap:12px; background:var(--bianco); }
+.slot:hover { border-color:var(--blu-light); background:var(--blu-pale); }
+.slot.occupied { background:rgba(231,76,60,0.05); border-color:rgba(231,76,60,0.2); cursor:default; }
+.slot-time { font-size:13px; font-weight:700; color:var(--blu); min-width:42px; flex-shrink:0; }
+.slot.occupied .slot-time { color:var(--rosso); }
+.slot-info { flex:1; min-width:0; }
+.slot-paziente { font-size:13px; font-weight:600; color:var(--testo); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.slot-tratt { font-size:11px; color:var(--testo-light); margin-top:1px; }
+.slot-free { font-size:12px; color:var(--verde); font-weight:600; }
+.slot-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+.modal-overlay { position:fixed; inset:0; background:rgba(15,46,71,0.6); backdrop-filter:blur(4px); z-index:500; display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal { background:var(--bianco); border-radius:20px 20px 0 0; padding:24px 20px 40px; width:100%; max-width:600px; margin:0 auto; transform:translateY(100%); transition:transform 0.3s cubic-bezier(0.34,1.1,0.64,1); max-height:92vh; overflow-y:auto; }
+.modal-overlay.open .modal { transform:translateY(0); }
+.modal-handle { width:40px; height:4px; background:var(--grigio-mid); border-radius:2px; margin:0 auto 18px; }
+.modal-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:600; color:var(--blu); margin-bottom:4px; }
+.modal-subtitle { font-size:13px; color:var(--testo-light); margin-bottom:18px; }
+
+.form-group { margin-bottom:14px; }
+label { display:block; font-size:11px; font-weight:700; color:var(--testo-light); text-transform:uppercase; letter-spacing:0.7px; margin-bottom:6px; }
+input, select { font-family:'DM Sans',sans-serif; font-size:15px; padding:12px 14px; border:1.5px solid var(--grigio); border-radius:10px; background:var(--grigio-chiaro); color:var(--testo); transition:border-color 0.2s; outline:none; width:100%; -webkit-appearance:none; }
+input:focus, select:focus { border-color:var(--blu-light); box-shadow:0 0 0 3px rgba(26,79,122,0.08); background:var(--bianco); }
+
+.tratt-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.tratt-pill { padding:10px 6px; border:2px solid var(--grigio); border-radius:10px; background:var(--grigio-chiaro); cursor:pointer; text-align:center; font-size:11px; font-weight:700; color:var(--testo-light); transition:all 0.18s; display:flex; flex-direction:column; align-items:center; gap:4px; user-select:none; }
+.tratt-pill .em { font-size:18px; }
+.tratt-pill.selected { border-color:var(--oro); background:rgba(201,168,76,0.1); color:var(--oro-dark); }
+
+.dur-row { display:flex; gap:8px; }
+.dur-btn { flex:1; padding:10px 6px; border:2px solid var(--grigio); border-radius:8px; background:var(--grigio-chiaro); cursor:pointer; font-size:13px; font-weight:700; color:var(--testo-light); text-align:center; transition:all 0.18s; user-select:none; }
+.dur-btn.selected { border-color:var(--blu); background:var(--blu); color:var(--bianco); }
+
+.met-row { display:flex; gap:7px; flex-wrap:wrap; }
+.met-btn { padding:8px 12px; border:2px solid var(--grigio); border-radius:8px; background:var(--grigio-chiaro); cursor:pointer; font-size:12px; font-weight:700; color:var(--testo-light); transition:all 0.18s; user-select:none; }
+.met-btn.selected { border-color:var(--blu); background:var(--blu); color:var(--bianco); }
+.met-btn.active { border-color:var(--blu); background:var(--blu); color:var(--bianco); }
+
+.btn-primary { background:linear-gradient(135deg,var(--blu) 0%,var(--blu-light) 100%); color:var(--bianco); border:none; padding:14px 28px; border-radius:12px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600; cursor:pointer; width:100%; box-shadow:0 4px 14px rgba(26,79,122,0.3); transition:all 0.2s; margin-top:6px; }
+.btn-primary:active { transform:scale(0.98); }
+.btn-sec { background:var(--grigio-chiaro); color:var(--testo-light); border:1.5px solid var(--grigio); padding:12px; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; width:100%; transition:all 0.2s; margin-top:8px; }
+
+.appt-item { display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:12px; border:1.5px solid var(--grigio); margin-bottom:10px; background:var(--bianco); }
+.appt-time { text-align:center; min-width:44px; flex-shrink:0; }
+.appt-ora { font-size:14px; font-weight:700; color:var(--blu); line-height:1; }
+.appt-dur-lbl { font-size:10px; color:var(--testo-light); margin-top:2px; }
+.appt-div { width:1px; height:34px; background:var(--grigio); flex-shrink:0; }
+.appt-info { flex:1; min-width:0; }
+.appt-pz { font-size:14px; font-weight:600; color:var(--testo); }
+.appt-sub { font-size:12px; color:var(--testo-light); margin-top:2px; }
+.appt-right { text-align:right; flex-shrink:0; }
+.appt-imp { font-size:14px; font-weight:700; color:var(--blu); font-family:'Playfair Display',serif; }
+.appt-met { font-size:11px; color:var(--testo-light); margin-top:2px; }
+.btn-del { background:none; border:none; color:var(--grigio-mid); font-size:16px; cursor:pointer; padding:4px; transition:color 0.2s; flex-shrink:0; }
+.btn-del:hover { color:var(--rosso); }
+
+.badge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+.bf { background:rgba(201,168,76,0.15); color:#a8863a; }
+.bb { background:rgba(26,79,122,0.12); color:var(--blu); }
+.bc { background:rgba(52,152,219,0.12); color:#1a6ea8; }
+.bl { background:rgba(155,89,182,0.12); color:#6c3483; }
+.bfi { background:rgba(46,204,113,0.12); color:#1a7a4a; }
+.bo { background:rgba(231,76,60,0.12); color:#a93226; }
+
+.stats-top { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+.stat-box { background:var(--bianco); border-radius:12px; padding:16px 12px; box-shadow:var(--shadow); text-align:center; border-top:3px solid var(--oro); }
+.stat-num { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; color:var(--blu); }
+.stat-lbl { font-size:10px; color:var(--testo-light); font-weight:600; margin-top:3px; text-transform:uppercase; letter-spacing:0.4px; }
+
+.bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.bar-lbl { width:82px; font-size:11px; font-weight:600; color:var(--testo-light); text-align:right; flex-shrink:0; }
+.bar-track { flex:1; height:8px; background:var(--grigio); border-radius:4px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--blu),var(--blu-light)); transition:width 0.6s ease; }
+.bar-cnt { width:22px; font-size:13px; font-weight:700; color:var(--blu); text-align:right; flex-shrink:0; }
+
+.rev-row { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--grigio); font-size:13px; }
+.rev-row:last-child { border-bottom:none; }
+.rev-val { font-weight:700; color:var(--blu); font-family:'Playfair Display',serif; font-size:15px; }
+
+.orario-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.or-lbl { font-size:13px; font-weight:600; color:var(--testo); min-width:38px; }
+.orario-row input[type=time] { flex:1; font-size:14px; padding:9px 12px; }
+.orario-row input[type=checkbox] { width:20px; height:20px; cursor:pointer; accent-color:var(--blu); flex-shrink:0; }
+
+.closed-msg { text-align:center; padding:30px; color:var(--testo-light); font-size:14px; }
+.closed-msg .ci { font-size:36px; margin-bottom:8px; }
+.empty { text-align:center; padding:36px 20px; color:var(--testo-light); }
+.empty .ei { font-size:42px; margin-bottom:10px; }
+
+.sp-item { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; border:1.5px solid var(--grigio); margin-bottom:8px; background:var(--bianco); }
+.sp-cat-icon { font-size:22px; flex-shrink:0; }
+.sp-info { flex:1; min-width:0; }
+.sp-desc { font-size:14px; font-weight:600; color:var(--testo); }
+.sp-sub { font-size:11px; color:var(--testo-light); margin-top:2px; }
+.sp-importo { font-size:15px; font-weight:700; color:var(--rosso); font-family:'Playfair Display',serif; flex-shrink:0; }
+
+.toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--blu-deep); color:var(--bianco); padding:12px 20px; border-radius:30px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.25); z-index:999; opacity:0; transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space:nowrap; display:flex; align-items:center; gap:8px; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌊</div>
+    <div><div class="logo-text">Fisio<span>lution</span></div></div>
+  </div>
+  <div class="header-time">
+    <strong id="hdr-data"></strong>
+    <span id="hdr-ora"></span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- CALENDARIO -->
+  <div id="tab-calendario" class="section active">
+    <div class="card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="cambiaSettimana(-1)">‹</button>
+        <div class="cal-title" id="cal-title"></div>
+        <button class="cal-nav-btn" onclick="cambiaSettimana(1)">›</button>
+      </div>
+      <div class="week-grid" id="week-grid"></div>
+      <div class="slots-header">
+        <div class="slots-date-label" id="slots-date-label"></div>
+        <div class="slots-legend">
+          <span><span class="leg-dot" style="background:var(--verde)"></span>Libero</span>
+          <span><span class="leg-dot" style="background:var(--rosso)"></span>Occupato</span>
+        </div>
+      </div>
+      <div class="time-slots" id="time-slots"></div>
+    </div>
+  </div>
+
+  <!-- LISTA -->
+  <div id="tab-lista" class="section">
+    <div class="card">
+      <div class="card-title">Appuntamenti</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input type="date" id="filtro-data" style="flex:1;min-width:130px" onchange="onChangeFiltroData()">
+        <button class="met-btn" id="fc-oggi" onclick="filtraOggi()">Oggi</button>
+        <button class="met-btn" id="fc-tutti" onclick="filtraTutti()">Tutti</button>
+        <button onclick="esportaCSV()" style="padding:8px 12px;background:linear-gradient(135deg,var(--oro-dark),var(--oro));color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">⬇ CSV</button>
+      </div>
+      <div id="lista-container"></div>
+      <div id="lista-footer" style="font-size:12px;color:var(--testo-light);margin-top:8px;text-align:right"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div id="tab-stats" class="section">
+    <div class="stats-top">
+      <div class="stat-box"><div class="stat-num" id="st-oggi">0</div><div class="stat-lbl">Oggi</div></div>
+      <div class="stat-box"><div class="stat-num" id="st-tot">0</div><div class="stat-lbl">Totale</div></div>
+      <div class="stat-box"><div class="stat-num" id="st-inc">€0</div><div class="stat-lbl">Incasso</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pazienti per trattamento</div>
+      <div id="st-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💰 Incasso vs Spese</div>
+      <div id="st-finanziario"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Incasso per metodo</div>
+      <div id="st-metodi"></div>
+    </div>
+  </div>
+
+  <!-- SPESE -->
+  <div id="tab-spese" class="section">
+    <div class="card">
+      <div class="card-title">Registra Spesa</div>
+      <div class="form-group">
+        <label>Descrizione *</label>
+        <input type="text" id="sp-desc" placeholder="Es. Materiali, Affitto, Forniture...">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>Importo (€) *</label>
+          <input type="number" id="sp-importo" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="sp-data">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <div class="met-row" id="sp-cat-row">
+          <div class="met-btn" onclick="selSpesaCat(this,'Materiali')">🧴 Materiali</div>
+          <div class="met-btn" onclick="selSpesaCat(this,'Attrezzatura')">🔧 Attrezzatura</div>
+          <div class="met-btn" onclick="selSpesaCat(this,'Affitto')">🏢 Affitto</div>
+          <div class="met-btn" onclick="selSpesaCat(this,'Utenze')">💡 Utenze</div>
+          <div class="met-btn" onclick="selSpesaCat(this,'Marketing')">📣 Marketing</div>
+          <div class="met-btn" onclick="selSpesaCat(this,'Altro')">📦 Altro</div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="salvaSpesa()">💾 Salva Spesa</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Riepilogo Spese</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input type="month" id="sp-filtro-mese" style="flex:1" onchange="renderSpese()">
+        <button class="met-btn" id="sp-fc-oggi" onclick="filtraSpesaOggi()">Oggi</button>
+        <button class="met-btn" id="sp-fc-mese" onclick="filtraSpesaMese()">Mese</button>
+      </div>
+      <div id="spese-container"></div>
+      <div id="spese-footer" style="font-size:12px;color:var(--testo-light);margin-top:8px;text-align:right;font-weight:700"></div>
+    </div>
+  </div>
+
+  <!-- IMPOSTAZIONI -->
+  <div id="tab-settings" class="section">
+    <div class="card">
+      <div class="card-title">Orari Studio</div>
+      <p style="font-size:13px;color:var(--testo-light);margin-bottom:16px">Attiva/disattiva giorni e imposta gli orari di apertura.</p>
+      <div id="orari-form"></div>
+      <button class="btn-primary" onclick="salvaOrari()" style="margin-top:10px">💾 Salva Orari</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Durata Default Appuntamento</div>
+      <div class="dur-row" id="default-dur-row">
+        <div class="dur-btn" onclick="selDefaultDur(this,30)">30 min</div>
+        <div class="dur-btn" onclick="selDefaultDur(this,45)">45 min</div>
+        <div class="dur-btn" onclick="selDefaultDur(this,60)">60 min</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<nav class="bottom-nav">
+  <button class="bnav-btn active" onclick="showTab('calendario',this)"><span class="ni">📅</span>Agenda</button>
+  <button class="bnav-btn" onclick="showTab('lista',this)"><span class="ni">📋</span>Lista</button>
+  <button class="bnav-btn" onclick="showTab('spese',this)"><span class="ni">💸</span>Spese</button>
+  <button class="bnav-btn" onclick="showTab('stats',this)"><span class="ni">📊</span>Stats</button>
+  <button class="bnav-btn" onclick="showTab('settings',this)"><span class="ni">⚙️</span>Orari</button>
+</nav>
+
+<!-- MODALE -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nuovo Appuntamento</div>
+    <div class="modal-subtitle" id="modal-subtitle"></div>
+
+    <div class="form-group">
+      <label>Nome Paziente *</label>
+      <input type="text" id="m-paziente" placeholder="Nome e cognome" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label>Trattamento *</label>
+      <div class="tratt-grid">
+        <div class="tratt-pill" onclick="selTratt(this,'Face Reset')"><span class="em">✨</span>Face Reset</div>
+        <div class="tratt-pill" onclick="selTratt(this,'Body Reset')"><span class="em">💪</span>Body Reset</div>
+        <div class="tratt-pill" onclick="selTratt(this,'Cell Reset')"><span class="em">❄️</span>Cell Reset</div>
+        <div class="tratt-pill" onclick="selTratt(this,'Lipedema')"><span class="em">🩺</span>Lipedema</div>
+        <div class="tratt-pill" onclick="selTratt(this,'Fisioterapia')"><span class="em">🦴</span>Fisioterapia</div>
+        <div class="tratt-pill" onclick="selTratt(this,'Open Day')"><span class="em">🎉</span>Open Day</div>
+        <div class="tratt-pill" onclick="selTratt(this,'Costruzione Futuro')"><span class="em">🏗️</span>CF</div>
+        <div class="tratt-pill" onclick="selTratt(this,'Domiciliare')"><span class="em">🏠</span>Domiciliare</div>
+        <div class="tratt-pill" onclick="selTratt(this,'Visita Nuova')"><span class="em">🔍</span>Visita Nuova</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Durata</label>
+      <div class="dur-row" id="modal-dur-row">
+        <div class="dur-btn" onclick="selDur(this,30)">30 min</div>
+        <div class="dur-btn selected" onclick="selDur(this,45)">45 min</div>
+        <div class="dur-btn" onclick="selDur(this,60)">60 min</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label>Importo (€)</label>
+        <input type="number" id="m-importo" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Operatore</label>
+        <select id="m-operatore"><option value="Paolo">Paolo</option><option value="Altro">Altro</option></select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Metodo Pagamento</label>
+      <div class="met-row" id="modal-met-row">
+        <div class="met-btn" onclick="selMet(this,'Contanti')">💵 Contanti</div>
+        <div class="met-btn" onclick="selMet(this,'Carta')">💳 Carta</div>
+        <div class="met-btn" onclick="selMet(this,'Bonifico')">🏦 Bonifico</div>
+        <div class="met-btn" onclick="selMet(this,'Scalare')">📦 Scalare</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Note</label>
+      <input type="text" id="m-note" placeholder="Facoltativo">
+    </div>
+
+    <button class="btn-primary" onclick="salvaAppuntamento()">✅ Conferma Appuntamento</button>
+    <button class="btn-sec" onclick="closeModal()">Annulla</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<script>
+// ═══ DATI ═══
+let appuntamenti = JSON.parse(localStorage.getItem('fiso_appts') || '[]');
+
+const defaultOrari = {
+  1:{aperto:true,inizio:'09:00',fine:'19:00'},
+  2:{aperto:true,inizio:'09:00',fine:'19:00'},
+  3:{aperto:true,inizio:'09:00',fine:'19:00'},
+  4:{aperto:true,inizio:'09:00',fine:'19:00'},
+  5:{aperto:true,inizio:'09:00',fine:'19:00'},
+  6:{aperto:false,inizio:'09:00',fine:'13:00'},
+  0:{aperto:false,inizio:'09:00',fine:'13:00'}
+};
+let orari = JSON.parse(localStorage.getItem('fiso_orari') || JSON.stringify(defaultOrari));
+let defaultDurata = parseInt(localStorage.getItem('fiso_dur') || '45');
+
+let currentWeekOffset = 0;
+let selectedDate = new Date(); selectedDate.setHours(0,0,0,0);
+let modalSlotData = null;
+let selTrattVal='', selDurVal=45, selMetVal='';
+let filtroMode='oggi';
+
+// ═══ INIT ═══
+(function(){
+  updateClock(); setInterval(updateClock,30000);
+  const today = formatDate(new Date());
+  document.getElementById('filtro-data').value = today;
+  renderWeek(); renderSlots();
+  // Pre-render orari form anche se non è la tab attiva
+  setTimeout(()=>{ renderOrariForm(); initDefaultDur(); }, 100);
+})();
+
+function updateClock(){
+  const now=new Date();
+  document.getElementById('hdr-data').textContent=now.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'short'});
+  document.getElementById('hdr-ora').textContent=now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ═══ TABS ═══
+function showTab(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='lista') renderLista();
+  if(name==='spese'){ const t=new Date().toISOString().split('T')[0]; document.getElementById('sp-data').value=t; document.getElementById('sp-filtro-mese').value=t.substring(0,7); filtraSpesaMese(); }
+  if(name==='stats') renderStats();
+  if(name==='settings'){ setTimeout(()=>{ renderOrariForm(); initDefaultDur(); },30); }
+}
+
+// ═══ SETTIMANA ═══
+function cambiaSettimana(dir){ currentWeekOffset+=dir; renderWeek(); }
+
+function renderWeek(){
+  const oggi=new Date(); oggi.setHours(0,0,0,0);
+  const base=new Date(oggi);
+  const dow0=base.getDay(); const diff=dow0===0?-6:1-dow0;
+  base.setDate(base.getDate()+diff+currentWeekOffset*7);
+
+  const mesi=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const end=new Date(base); end.setDate(end.getDate()+6);
+  document.getElementById('cal-title').textContent=
+    base.getMonth()===end.getMonth()
+      ? `${mesi[base.getMonth()]} ${base.getFullYear()}`
+      : `${mesi[base.getMonth()]}–${mesi[end.getMonth()]} ${end.getFullYear()}`;
+
+  const giorni=['Lu','Ma','Me','Gi','Ve','Sa','Do'];
+  const dowMap=[1,2,3,4,5,6,0];
+  const grid=document.getElementById('week-grid'); grid.innerHTML='';
+
+  for(let i=0;i<7;i++){
+    const d=new Date(base); d.setDate(d.getDate()+i);
+    const dow=d.getDay();
+    const isAperto=orari[dow]&&orari[dow].aperto;
+    const isOggi=d.getTime()===oggi.getTime();
+    const isSel=d.getTime()===selectedDate.getTime();
+    const haAppts=appuntamenti.some(a=>a.data===formatDate(d));
+    const cell=document.createElement('div');
+    cell.className='day-cell'+(isOggi?' today':'')+(isSel?' selected':'')+(!isAperto?' disabled':'');
+    cell.innerHTML=`<span class="day-name">${giorni[i]}</span><span class="day-num">${d.getDate()}</span><span class="day-dot ${haAppts?'':'hidden'}"></span>`;
+    const _d=new Date(d);
+    cell.onclick=()=>{ selectedDate=_d; renderWeek(); renderSlots(); };
+    grid.appendChild(cell);
+  }
+}
+
+// ═══ SLOT ═══
+function renderSlots(){
+  const dateStr=formatDate(selectedDate);
+  const dow=selectedDate.getDay();
+  const og=orari[dow];
+
+  document.getElementById('slots-date-label').textContent=
+    selectedDate.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'});
+
+  const container=document.getElementById('time-slots');
+  container.innerHTML='';
+
+  if(!og||!og.aperto){
+    container.innerHTML=`<div class="closed-msg"><div class="ci">🔒</div><p>Studio chiuso</p></div>`;
+    return;
+  }
+
+  const inizio=timeToMin(og.inizio);
+  const fine=timeToMin(og.fine);
+  const apptG=appuntamenti.filter(a=>a.data===dateStr);
+
+  for(let t=inizio;t<fine;t+=15){
+    const timeStr=minToTime(t);
+    const appt=apptG.find(a=>a.ora===timeStr);
+    const coperto=apptG.some(a=>{
+      const aS=timeToMin(a.ora), aE=aS+(a.durata||45);
+      return t>aS && t<aE;
+    });
+    if(coperto) continue;
+
+    const slot=document.createElement('div');
+    if(appt){
+      slot.className='slot occupied';
+      slot.innerHTML=`
+        <div class="slot-dot" style="background:var(--rosso)"></div>
+        <div class="slot-time">${timeStr}</div>
+        <div class="slot-info">
+          <div class="slot-paziente">${appt.paziente}</div>
+          <div class="slot-tratt">${appt.trattamento} · ${appt.durata||45} min${appt.importo>0?' · €'+appt.importo.toFixed(2):''}</div>
+        </div>
+        <button class="btn-del" onclick="eliminaAppt(${appt.id})" style="pointer-events:all">🗑</button>`;
+    } else {
+      slot.className='slot';
+      slot.innerHTML=`
+        <div class="slot-dot" style="background:var(--verde)"></div>
+        <div class="slot-time">${timeStr}</div>
+        <div class="slot-info"><div class="slot-free">Disponibile</div></div>
+        <span style="color:var(--grigio-mid);font-size:20px;font-weight:300">+</span>`;
+      const _t=timeStr, _d=dateStr;
+      slot.onclick=()=>openModal(_d,_t);
+    }
+    container.appendChild(slot);
+  }
+
+  if(!container.children.length){
+    container.innerHTML=`<div class="closed-msg"><div class="ci">✅</div><p>Tutti gli slot occupati!</p></div>`;
+  }
+}
+
+// ═══ MODALE ═══
+function openModal(dateStr,timeStr){
+  modalSlotData={date:dateStr,time:timeStr};
+  selTrattVal=''; selMetVal=''; selDurVal=defaultDurata;
+  document.getElementById('m-paziente').value='';
+  document.getElementById('m-importo').value='';
+  document.getElementById('m-note').value='';
+  document.querySelectorAll('.tratt-pill').forEach(p=>p.classList.remove('selected'));
+  document.querySelectorAll('#modal-met-row .met-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('#modal-dur-row .dur-btn').forEach(b=>{
+    b.classList.toggle('selected',parseInt(b.textContent)===defaultDurata);
+  });
+  const d=new Date(dateStr+'T12:00:00');
+  document.getElementById('modal-subtitle').textContent=
+    '📍 '+d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'})+' alle '+timeStr;
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-paziente').focus(),400);
+}
+
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e){ if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+
+function selTratt(el,val){ document.querySelectorAll('.tratt-pill').forEach(p=>p.classList.remove('selected')); el.classList.add('selected'); selTrattVal=val; }
+function selDur(el,val){ document.querySelectorAll('#modal-dur-row .dur-btn').forEach(b=>b.classList.remove('selected')); el.classList.add('selected'); selDurVal=val; }
+function selMet(el,val){ document.querySelectorAll('#modal-met-row .met-btn').forEach(b=>b.classList.remove('selected')); el.classList.add('selected'); selMetVal=val; }
+
+// ═══ SALVA ═══
+function salvaAppuntamento(){
+  const paziente=document.getElementById('m-paziente').value.trim();
+  if(!paziente){ showToast('⚠️ Inserisci nome paziente'); return; }
+  if(!selTrattVal){ showToast('⚠️ Seleziona trattamento'); return; }
+
+  const importo=parseFloat(document.getElementById('m-importo').value)||0;
+  const newStart=timeToMin(modalSlotData.time);
+  const newEnd=newStart+selDurVal;
+
+  const conflitto=appuntamenti.find(a=>{
+    if(a.data!==modalSlotData.date) return false;
+    const aS=timeToMin(a.ora), aE=aS+(a.durata||45);
+    return newStart<aE && newEnd>aS;
+  });
+  if(conflitto){ showToast('⚠️ Sovrapposizione con '+conflitto.paziente); return; }
+
+  appuntamenti.push({
+    id:Date.now(), data:modalSlotData.date, ora:modalSlotData.time,
+    durata:selDurVal, paziente, trattamento:selTrattVal,
+    operatore:document.getElementById('m-operatore').value,
+    importo, metodo:selMetVal,
+    note:document.getElementById('m-note').value.trim()
+  });
+
+  localStorage.setItem('fiso_appts',JSON.stringify(appuntamenti));
+  closeModal(); renderWeek(); renderSlots();
+  showToast('✅ Appuntamento salvato!');
+}
+
+function eliminaAppt(id){
+  if(!confirm('Eliminare questo appuntamento?')) return;
+  appuntamenti=appuntamenti.filter(a=>a.id!==id);
+  localStorage.setItem('fiso_appts',JSON.stringify(appuntamenti));
+  renderWeek(); renderSlots(); renderLista();
+  showToast('🗑 Eliminato');
+}
+
+// ═══ LISTA ═══
+function filtraOggi(){
+  filtroMode='oggi';
+  document.getElementById('fc-oggi').classList.add('active');
+  document.getElementById('fc-tutti').classList.remove('active');
+  renderLista();
+}
+function filtraTutti(){
+  filtroMode='tutti';
+  document.getElementById('fc-tutti').classList.add('active');
+  document.getElementById('fc-oggi').classList.remove('active');
+  renderLista();
+}
+function onChangeFiltroData(){
+  filtroMode='data';
+  document.getElementById('fc-oggi').classList.remove('active');
+  document.getElementById('fc-tutti').classList.remove('active');
+  renderLista();
+}
+
+function renderLista(){
+  const today=formatDate(new Date());
+  const dataFiltro=document.getElementById('filtro-data').value;
+  let filtered=filtroMode==='oggi'?appuntamenti.filter(a=>a.data===today):
+    filtroMode==='tutti'?[...appuntamenti]:appuntamenti.filter(a=>a.data===dataFiltro);
+  filtered.sort((a,b)=>a.data.localeCompare(b.data)||a.ora.localeCompare(b.ora));
+
+  const c=document.getElementById('lista-container');
+  if(!filtered.length){
+    c.innerHTML='<div class="empty"><div class="ei">📭</div><p>Nessun appuntamento</p></div>';
+    document.getElementById('lista-footer').textContent=''; return;
+  }
+
+  c.innerHTML=filtered.map(a=>`
+    <div class="appt-item">
+      <div class="appt-time"><div class="appt-ora">${a.ora||'—'}</div><div class="appt-dur-lbl">${a.durata||45}min</div></div>
+      <div class="appt-div"></div>
+      <div class="appt-info">
+        <div class="appt-pz">${a.paziente}</div>
+        <div class="appt-sub"><span class="badge ${badgeClass(a.trattamento)}">${a.trattamento}</span> · ${a.data}</div>
+      </div>
+      <div class="appt-right">
+        <div class="appt-imp">${a.importo>0?'€'+a.importo.toFixed(2):'—'}</div>
+        <div class="appt-met">${a.metodo||''}</div>
+      </div>
+      <button class="btn-del" onclick="eliminaAppt(${a.id})">🗑</button>
+    </div>`).join('');
+
+  const tot=filtered.reduce((s,a)=>s+a.importo,0);
+  document.getElementById('lista-footer').textContent=
+    `${filtered.length} appuntament${filtered.length===1?'o':'i'} · €${tot.toFixed(2)}`;
+}
+
+// ═══ STATS ═══
+function renderStats(){
+  const today=formatDate(new Date());
+  const meseStr=today.substring(0,7);
+  const incTot=appuntamenti.reduce((s,a)=>s+a.importo,0);
+  const speseTot=spese.reduce((s,sp)=>s+sp.importo,0);
+  const incMese=appuntamenti.filter(a=>a.data&&a.data.startsWith(meseStr)).reduce((s,a)=>s+a.importo,0);
+  const speseMese=spese.filter(sp=>sp.data&&sp.data.startsWith(meseStr)).reduce((s,sp)=>s+sp.importo,0);
+  const incOggi=appuntamenti.filter(a=>a.data===today).reduce((s,a)=>s+a.importo,0);
+  const speseOggi=spese.filter(sp=>sp.data===today).reduce((s,sp)=>s+sp.importo,0);
+
+  document.getElementById('st-oggi').textContent=appuntamenti.filter(a=>a.data===today).length;
+  document.getElementById('st-tot').textContent=appuntamenti.length;
+  document.getElementById('st-inc').textContent='€'+incTot.toFixed(0);
+
+  // Riepilogo finanziario
+  const finEl=document.getElementById('st-finanziario');
+  if(finEl) finEl.innerHTML=`
+    <div class="rev-row"><span>📅 Incasso oggi</span><span class="rev-val" style="color:var(--verde)">€${incOggi.toFixed(2)}</span></div>
+    <div class="rev-row"><span>💸 Spese oggi</span><span class="rev-val" style="color:var(--rosso)">€${speseOggi.toFixed(2)}</span></div>
+    <div class="rev-row" style="font-weight:700"><span>📊 Margine oggi</span><span class="rev-val" style="color:${(incOggi-speseOggi)>=0?'var(--verde)':'var(--rosso)'}">€${(incOggi-speseOggi).toFixed(2)}</span></div>
+    <div style="height:1px;background:var(--grigio);margin:8px 0"></div>
+    <div class="rev-row"><span>📅 Incasso mese</span><span class="rev-val" style="color:var(--verde)">€${incMese.toFixed(2)}</span></div>
+    <div class="rev-row"><span>💸 Spese mese</span><span class="rev-val" style="color:var(--rosso)">€${speseMese.toFixed(2)}</span></div>
+    <div class="rev-row" style="font-weight:700"><span>📊 Margine mese</span><span class="rev-val" style="color:${(incMese-speseMese)>=0?'var(--verde)':'var(--rosso)'}">€${(incMese-speseMese).toFixed(2)}</span></div>
+    <div style="height:1px;background:var(--grigio);margin:8px 0"></div>
+    <div class="rev-row"><span>💰 Incasso totale</span><span class="rev-val" style="color:var(--verde)">€${incTot.toFixed(2)}</span></div>
+    <div class="rev-row"><span>💸 Spese totali</span><span class="rev-val" style="color:var(--rosso)">€${speseTot.toFixed(2)}</span></div>
+    <div class="rev-row" style="font-weight:700"><span>🏆 Margine totale</span><span class="rev-val" style="color:${(incTot-speseTot)>=0?'var(--verde)':'var(--rosso)'}">€${(incTot-speseTot).toFixed(2)}</span></div>
+  `;
+
+  const trattamenti=['Face Reset','Body Reset','Cell Reset','Lipedema','Fisioterapia','Open Day','Costruzione Futuro','Domiciliare','Visita Nuova'];
+  const max=Math.max(...trattamenti.map(t=>appuntamenti.filter(a=>a.trattamento===t).length),1);
+  document.getElementById('st-bars').innerHTML=trattamenti.map(t=>{
+    const cnt=appuntamenti.filter(a=>a.trattamento===t).length;
+    return `<div class="bar-row"><div class="bar-lbl">${t}</div><div class="bar-track"><div class="bar-fill" style="width:${(cnt/max*100).toFixed(0)}%"></div></div><div class="bar-cnt">${cnt}</div></div>`;
+  }).join('');
+
+  const metodi=['Contanti','Carta','Bonifico','Scalare'];
+  document.getElementById('st-metodi').innerHTML=metodi.map(m=>{
+    const cnt=appuntamenti.filter(a=>a.metodo===m).length;
+    const inc=appuntamenti.filter(a=>a.metodo===m).reduce((s,a)=>s+a.importo,0);
+    return `<div class="rev-row"><span>${m} <span style="font-size:11px;color:#aaa">(${cnt})</span></span><span class="rev-val">€${inc.toFixed(2)}</span></div>`;
+  }).join('');
+}
+
+// ═══ ORARI ═══
+const nomiGiorni=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+const ordine=[1,2,3,4,5,6,0];
+
+function renderOrariForm(){
+  const el=document.getElementById('orari-form');
+  if(!el) return;
+  el.innerHTML=ordine.map(dow=>{
+    const o=orari[dow]||{aperto:false,inizio:'09:00',fine:'18:00'};
+    return `<div class="orario-row">
+      <input type="checkbox" id="oc-${dow}" ${o.aperto?'checked':''} onchange="toggleOr(${dow})">
+      <div class="or-lbl">${nomiGiorni[dow]}</div>
+      <input type="time" id="oi-${dow}" value="${o.inizio}" ${o.aperto?'':'disabled'} style="opacity:${o.aperto?1:0.4}">
+      <span style="font-size:12px;color:var(--testo-light)">–</span>
+      <input type="time" id="of-${dow}" value="${o.fine}" ${o.aperto?'':'disabled'} style="opacity:${o.aperto?1:0.4}">
+    </div>`;
+  }).join('');
+}
+
+function toggleOr(dow){
+  const chk=document.getElementById('oc-'+dow);
+  ['oi-','of-'].forEach(p=>{
+    const el=document.getElementById(p+dow);
+    el.disabled=!chk.checked;
+    el.style.opacity=chk.checked?1:0.4;
+  });
+}
+
+function salvaOrari(){
+  ordine.forEach(dow=>{
+    orari[dow]={
+      aperto:document.getElementById('oc-'+dow).checked,
+      inizio:document.getElementById('oi-'+dow).value,
+      fine:document.getElementById('of-'+dow).value
+    };
+  });
+  localStorage.setItem('fiso_orari',JSON.stringify(orari));
+  showToast('✅ Orari salvati!');
+  renderWeek(); renderSlots();
+}
+
+function selDefaultDur(el,val){
+  document.querySelectorAll('#default-dur-row .dur-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  defaultDurata=val;
+  localStorage.setItem('fiso_dur',val);
+  showToast('✅ Durata default: '+val+' min');
+}
+
+function initDefaultDur(){
+  document.querySelectorAll('#default-dur-row .dur-btn').forEach(b=>{
+    b.classList.toggle('selected',parseInt(b.textContent)===defaultDurata);
+  });
+}
+
+// ═══ CSV ═══
+function esportaCSV(){
+  const today=formatDate(new Date()), dataFiltro=document.getElementById('filtro-data').value;
+  let filtered=filtroMode==='oggi'?appuntamenti.filter(a=>a.data===today):
+    filtroMode==='tutti'?[...appuntamenti]:appuntamenti.filter(a=>a.data===dataFiltro);
+  if(!filtered.length){ showToast('⚠️ Nessun dato'); return; }
+  const rows=[['Data','Ora','Paziente','Trattamento','Durata','Operatore','Importo','Metodo','Note'],
+    ...filtered.map(a=>[a.data,a.ora,a.paziente,a.trattamento,a.durata,a.operatore,a.importo,a.metodo||'',a.note||''])];
+  const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  link.download=`fisiolution_${today}.csv`; link.click();
+  showToast('📥 CSV scaricato!');
+}
+
+
+// ═══ SPESE ═══
+let spese = JSON.parse(localStorage.getItem('fiso_spese') || '[]');
+let selSpesaCatVal = '';
+let filtroSpesaMode = 'mese';
+
+(function initSpese(){
+  const today = new Date().toISOString().split('T')[0];
+  if(document.getElementById('sp-data')) document.getElementById('sp-data').value = today;
+  const ym = today.substring(0,7);
+  if(document.getElementById('sp-filtro-mese')) document.getElementById('sp-filtro-mese').value = ym;
+})();
+
+function selSpesaCat(el, val){
+  document.querySelectorAll('#sp-cat-row .met-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  selSpesaCatVal = val;
+}
+
+function salvaSpesa(){
+  const desc = document.getElementById('sp-desc').value.trim();
+  const importo = parseFloat(document.getElementById('sp-importo').value)||0;
+  const data = document.getElementById('sp-data').value;
+  if(!desc){ showToast('⚠️ Inserisci descrizione'); return; }
+  if(!importo){ showToast('⚠️ Inserisci importo'); return; }
+  spese.push({ id:Date.now(), desc, importo, data, categoria: selSpesaCatVal||'Altro' });
+  localStorage.setItem('fiso_spese', JSON.stringify(spese));
+  document.getElementById('sp-desc').value='';
+  document.getElementById('sp-importo').value='';
+  document.querySelectorAll('#sp-cat-row .met-btn').forEach(b=>b.classList.remove('selected'));
+  selSpesaCatVal='';
+  renderSpese();
+  showToast('✅ Spesa salvata!');
+}
+
+function filtraSpesaOggi(){
+  filtroSpesaMode='oggi';
+  document.getElementById('sp-fc-oggi').classList.add('active');
+  document.getElementById('sp-fc-mese').classList.remove('active');
+  renderSpese();
+}
+
+function filtraSpesaMese(){
+  filtroSpesaMode='mese';
+  document.getElementById('sp-fc-mese').classList.add('active');
+  document.getElementById('sp-fc-oggi').classList.remove('active');
+  renderSpese();
+}
+
+function renderSpese(){
+  const today = new Date().toISOString().split('T')[0];
+  const mese = document.getElementById('sp-filtro-mese').value;
+  let filtered = filtroSpesaMode==='oggi'
+    ? spese.filter(s=>s.data===today)
+    : spese.filter(s=>s.data&&s.data.startsWith(mese));
+  filtered.sort((a,b)=>b.data.localeCompare(a.data));
+
+  const catIcon = {'Materiali':'🧴','Attrezzatura':'🔧','Affitto':'🏢','Utenze':'💡','Marketing':'📣','Altro':'📦'};
+  const c = document.getElementById('spese-container');
+  if(!filtered.length){
+    c.innerHTML='<div class="empty"><div class="ei">💸</div><p>Nessuna spesa registrata</p></div>';
+    document.getElementById('spese-footer').textContent='';
+    return;
+  }
+  c.innerHTML = filtered.map(s=>`
+    <div class="sp-item">
+      <div class="sp-cat-icon">${catIcon[s.categoria]||'📦'}</div>
+      <div class="sp-info">
+        <div class="sp-desc">${s.desc}</div>
+        <div class="sp-sub">${s.categoria} · ${s.data}</div>
+      </div>
+      <div class="sp-importo">-€${s.importo.toFixed(2)}</div>
+      <button class="btn-del" onclick="eliminaSpesa(${s.id})">🗑</button>
+    </div>`).join('');
+
+  const tot = filtered.reduce((sum,s)=>sum+s.importo,0);
+  document.getElementById('spese-footer').textContent = `Totale spese: €${tot.toFixed(2)}`;
+}
+
+function eliminaSpesa(id){
+  if(!confirm('Eliminare questa spesa?')) return;
+  spese = spese.filter(s=>s.id!==id);
+  localStorage.setItem('fiso_spese', JSON.stringify(spese));
+  renderSpese();
+  showToast('🗑 Eliminata');
+}
+
+// ═══ UTILS ═══
+function formatDate(d){ return d.toISOString().split('T')[0]; }
+function timeToMin(t){ if(!t) return 0; const [h,m]=t.split(':').map(Number); return h*60+m; }
+function minToTime(m){ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+function badgeClass(t){ return {'Face Reset':'bf','Body Reset':'bb','Cell Reset':'bc','Lipedema':'bl','Fisioterapia':'bfi','Open Day':'bo','Costruzione Futuro':'bb','Domiciliare':'bfi','Visita Nuova':'bf'}[t]||''; }
+function showToast(msg){ const t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+</script>
+</body>
+</html>
